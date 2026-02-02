@@ -55,7 +55,19 @@ void main() {
   runApp(
     AppSizer(
       designWidth: 375,  // Your design dimensions (e.g., iPhone 11)
-      designHeight: 812,
+      designHeight: 812, // Your design dimensions
+      // Optional: Full Configuration
+      minTextScale: 0.6,          // Minimum allowed text scale factor
+      maxTextScale: 1.4,          // Maximum allowed text scale factor
+      textScaleFactor: 1.0,       // Global multiplier for all .sp values
+      useHeightForTextScale: false, // Use min(scaleW, scaleH) for text scaling
+      baseExtraLargeTextSize: 26, // Base size for context.extraLarge (26.sp)
+      baseLargeTextSize: 20,      // Base size for context.large (20.sp)
+      baseMediumTextSize: 16,     // Base size for context.medium (16.sp)
+      baseSmallTextSize: 12,      // Base size for context.small (12.sp)
+      tabletBreakpoint: 600,      // Mobile < 600 <= Tablet
+      tabletLargeBreakpoint: 900, // Tablet < 900 <= TabletLarge
+      desktopBreakpoint: 1100,    // TabletLarge < 1100 <= Desktop
       // Optional: Pass pre-calculated values for zero-runtime-cost scaling
       // precalcFunction: useAppSizerPrecalc, 
       builder: (context) => const MyApp(),
@@ -63,6 +75,24 @@ void main() {
   );
 }
 ```
+
+#### AppSizer Configuration
+
+| Parameter | Default | Description |
+|-----------|---------|-------------|
+| `designWidth` | **Required** | The width of your design mockup (px) |
+| `designHeight` | **Required** | The height of your design mockup (px) |
+| `minTextScale` | `0.6` | Minimum allowed text scale factor |
+| `maxTextScale` | `1.4` | Maximum allowed text scale factor |
+| `textScaleFactor` | `1.0` | Global multiplier for all `.sp` values |
+| `useHeightForTextScale` | `false` | If true, uses min(scaleW, scaleH) for mobile text scaling |
+| `baseExtraLargeTextSize` | `26` | Base size for `context.extraLarge` |
+| `baseLargeTextSize` | `20` | Base size for `context.large` |
+| `baseMediumTextSize` | `16` | Base size for `context.medium` |
+| `baseSmallTextSize` | `12` | Base size for `context.small` |
+| `tabletBreakpoint` | `600` | Width threshold for Tablet device type |
+| `tabletLargeBreakpoint` | `900` | Width threshold for TabletLarge device type |
+| `desktopBreakpoint` | `1100` | Width threshold for Desktop device type |
 
 ### 2. Use Responsive Extensions
 
@@ -112,6 +142,7 @@ Create different layouts for different devices:
 AdaptiveLayout(
   mobileLayout: (context) => MobileLayout(),
   tabletLayout: (context) => TabletLayout(),
+  tabletLargeLayout: (context) => TabletLargeLayout(),
   desktopLayout: (context) => DesktopLayout(),
 )
 ```
@@ -190,6 +221,10 @@ AdaptiveLayout(
     crossAxisCount: 2,
     children: items.map((item) => Card(child: Text(item))).toList(),
   ),
+  tabletLargeLayout: (context) => GridView.count(
+    crossAxisCount: 3,
+    children: items.map((item) => Card(child: Text(item))).toList(),
+  ),
   desktopLayout: (context) => GridView.count(
     crossAxisCount: 4,
     children: items.map((item) => Card(child: Text(item))).toList(),
@@ -210,6 +245,9 @@ Quickly access typography and sizes through `context`:
 | `context.title` | Alias for `large` |
 | `context.subtitle` | Alias for `medium` |
 | `context.deviceType` | Direct access to current `DeviceType` |
+| `context.tabletBreakpoint` | Access to configured tablet breakpoint |
+| `context.tabletLargeBreakpoint` | Access to configured tabletLarge breakpoint |
+| `context.desktopBreakpoint` | Access to configured desktop breakpoint |
 
 ### Adaptive Values
 
@@ -408,18 +446,59 @@ Always test your responsive UI on:
 - Tablets (600-1024px width)
 - Desktops (> 1200px width)
 
+---
+
+### 🎨 Using with Themes (Important Hint)
+
+If you want to use responsive values (like `.sp`, `.r`, `.w`, `.h`) inside your `ThemeData`, it is highly recommended to wrap your theme inside the `builder` of `MaterialApp`. This ensures that the responsive values are calculated correctly whenever the screen size or orientation changes.
+
+> **💡 Note**: Using responsive extensions in a global static `ThemeData` variable will NOT work because those values are only calculated once at startup.
+
+```dart
+AppSizer(
+  designWidth: 375,
+  designHeight: 812,
+  builder: (context) => MaterialApp(
+    // Use the builder to ensure theme stays responsive
+    builder: (context, child) {
+      return Theme(
+        data: ThemeData(
+          primarySwatch: Colors.blue,
+          textTheme: TextTheme(
+            // Use .sp for responsive font sizes
+            bodyMedium: TextStyle(fontSize: 16.sp),
+            titleLarge: TextStyle(fontSize: 24.sp, fontWeight: FontWeight.bold),
+          ),
+          cardTheme: CardTheme(
+            // Use .r for responsive radius
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12.r),
+            ),
+          ),
+        ),
+        child: child!,
+      );
+    },
+    home: const HomePage(),
+  ),
+);
+```
+
 ## 🔧 Advanced Usage
 
 ### Custom Breakpoints
 
-Modify breakpoints in `responsive.dart`:
+You can easily customize breakpoints through the `AppSizer` constructor:
 
 ```dart
-DeviceType _getDeviceType(double width) {
-  if (width < 600) return DeviceType.mobile;
-  if (width < 1200) return DeviceType.tablet;
-  return DeviceType.desktop;
-}
+AppSizer(
+  designWidth: 375,
+  designHeight: 812,
+  tabletBreakpoint: 700,
+  tabletLargeBreakpoint: 1000,
+  desktopBreakpoint: 1400,
+  builder: (context) => MyApp(),
+)
 ```
 
 ### Pre-generate Scaled Values

@@ -25,6 +25,11 @@ class AppSizesNotifier extends ChangeNotifier {
   final double baseMediumTextSize;
   final double baseSmallTextSize;
 
+  /// Breakpoints
+  final double tabletBreakpoint;
+  final double tabletLargeBreakpoint;
+  final double desktopBreakpoint;
+
   AppSizesNotifier({
     required this.designWidth,
     required this.designHeight,
@@ -36,6 +41,9 @@ class AppSizesNotifier extends ChangeNotifier {
     this.baseLargeTextSize = 20,
     this.baseMediumTextSize = 16,
     this.baseSmallTextSize = 12,
+    this.tabletBreakpoint = 600,
+    this.tabletLargeBreakpoint = 900,
+    this.desktopBreakpoint = 1100,
   });
 
   double screenWidth = 375;
@@ -82,12 +90,15 @@ class AppSizesNotifier extends ChangeNotifier {
       scaleH = screenHeight / designH;
 
       // 3️⃣ Determine device type
-      deviceType = switch (screenWidth) {
-        >= 1100 => DeviceType.desktop,
-        >= 900 => DeviceType.tabletLarge,
-        >= 600 => DeviceType.tablet,
-        _ => DeviceType.mobile,
-      };
+      if (screenWidth >= desktopBreakpoint) {
+        deviceType = DeviceType.desktop;
+      } else if (screenWidth >= tabletLargeBreakpoint) {
+        deviceType = DeviceType.tabletLarge;
+      } else if (screenWidth >= tabletBreakpoint) {
+        deviceType = DeviceType.tablet;
+      } else {
+        deviceType = DeviceType.mobile;
+      }
 
       // 4️⃣ Text Scale
       scaleText = _calculateTextScale(designW);
@@ -152,11 +163,11 @@ class AppSizesNotifier extends ChangeNotifier {
         scale = min(scale, scaleH);
       }
     } else if (deviceType == DeviceType.tablet) {
-      scale = screenWidth / 600;
+      scale = screenWidth / tabletBreakpoint;
     } else if (deviceType == DeviceType.tabletLarge) {
-      scale = screenWidth / 900;
+      scale = screenWidth / tabletLargeBreakpoint;
     } else {
-      scale = screenWidth / 1100;
+      scale = screenWidth / desktopBreakpoint;
     }
 
     return scale * textScaleFactor;
@@ -189,6 +200,10 @@ extension AppSizesX on BuildContext {
   AppSizesNotifier get appSizes => AppSizesProvider.of(this);
 
   DeviceType get deviceType => appSizes.deviceType;
+
+  double get tabletBreakpoint => appSizes.tabletBreakpoint;
+  double get tabletLargeBreakpoint => appSizes.tabletLargeBreakpoint;
+  double get desktopBreakpoint => appSizes.desktopBreakpoint;
 
   double sh(double value) => appSizes.sh(value);
 
@@ -291,6 +306,11 @@ class AppSizer extends StatefulWidget {
   /// Base small text size
   final double baseSmallTextSize;
 
+  /// Breakpoints
+  final double tabletBreakpoint;
+  final double tabletLargeBreakpoint;
+  final double desktopBreakpoint;
+
   const AppSizer({
     super.key,
     required this.designWidth,
@@ -305,6 +325,9 @@ class AppSizer extends StatefulWidget {
     this.baseLargeTextSize = 20,
     this.baseMediumTextSize = 16,
     this.baseSmallTextSize = 12,
+    this.tabletBreakpoint = 600,
+    this.tabletLargeBreakpoint = 900,
+    this.desktopBreakpoint = 1100,
   });
 
   @override
@@ -327,6 +350,9 @@ class _AppSizerState extends State<AppSizer> with WidgetsBindingObserver {
       baseLargeTextSize: widget.baseLargeTextSize,
       baseMediumTextSize: widget.baseMediumTextSize,
       baseSmallTextSize: widget.baseSmallTextSize,
+      tabletBreakpoint: widget.tabletBreakpoint,
+      tabletLargeBreakpoint: widget.tabletLargeBreakpoint,
+      desktopBreakpoint: widget.desktopBreakpoint,
     );
     WidgetsBinding.instance.addObserver(this);
   }
@@ -384,18 +410,22 @@ class AdaptiveLayout extends StatelessWidget {
     super.key,
     required this.mobileLayout,
     this.tabletLayout,
+    this.tabletLargeLayout,
     this.desktopLayout,
   });
 
   final WidgetBuilder mobileLayout;
-  final WidgetBuilder? tabletLayout, desktopLayout;
+  final WidgetBuilder? tabletLayout, tabletLargeLayout, desktopLayout;
   @override
   Widget build(BuildContext context) => switch (context.deviceType) {
         DeviceType.mobile => mobileLayout(context),
-        DeviceType.tablet ||
-        DeviceType.tabletLarge =>
+        DeviceType.tablet =>
           tabletLayout?.call(context) ?? mobileLayout(context),
+        DeviceType.tabletLarge => tabletLargeLayout?.call(context) ??
+            tabletLayout?.call(context) ??
+            mobileLayout(context),
         DeviceType.desktop => desktopLayout?.call(context) ??
+            tabletLargeLayout?.call(context) ??
             tabletLayout?.call(context) ??
             mobileLayout(context),
       };
