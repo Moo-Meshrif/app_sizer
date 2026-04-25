@@ -1,0 +1,24 @@
+name: app_sizer
+description: A high-performance responsive framework for Flutter that makes your UI adapt seamlessly to any screen size with intuitive extensions and smart caching.
+version: 0.0.1
+repository: https://github.com/Moo-Meshrif/app_sizer
+homepage: https://github.com/Moo-Meshrif/app_sizer
+issue_tracker: https://github.com/Moo-Meshrif/app_sizer/issues
+platforms:
+  android:
+  ios:
+  web:
+  macos:
+  linux:
+  windows:
+
+environment:
+  sdk: ">=3.0.0 <4.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
