@@ -150,11 +150,8 @@ Use these on any `num` (int or double) to scale values based on screen dimension
 | `.sw` | Screen Width % | `0.5.sw` is 50% of screen width |
 | `.vGap` | Vertical Gap | Returns a `SizedBox` with scaled height |
 | `.hGap` | Horizontal Gap| Returns a `SizedBox` with scaled width |
-| `.wMax(cap)`| Capped Width | Scales by width but never exceeds `cap` px |
-| `.hMax(cap)`| Capped Height | Scales by height but never exceeds `cap` px |
-| `.rMax(cap)`| Capped Radius | Scales by radius but never exceeds `cap` px |
-| `.vGapMax(cap)`| Capped V-Gap | `SizedBox` with height scaled but capped |
-| `.hGapMax(cap)`| Capped H-Gap | `SizedBox` with width scaled but capped |
+| `.sh(fraction)` | Screen Height | `fraction` * screen height |
+| `.sw(fraction)` | Screen Width  | `fraction` * screen width |
 
 **Example:**
 
@@ -222,6 +219,15 @@ LayoutBuilder(
 The `.value()` extension allows you to provide different values for different device types in a single line:
 
 ```dart
+// 1. Extension on context (Generic T)
+int columns = context.value<int>(
+  2, // mobile
+  tablet: 3,
+  largeTablet: 4,
+  desktop: 6,
+);
+
+// 2. Extension on num (specific to int)
 int columns = 2.value(
   context,
   tablet: 3,
@@ -328,6 +334,31 @@ AdaptiveLayout(
 )
 ```
 
+### 📦 AppSizerScope (Local Override)
+
+Override design dimensions for a specific subtree. Perfect for dialogs, sidebars, or embedded components designed on a different Figma frame size.
+
+```dart
+// Root app designed at 375x812
+AppSizerScope(
+  designWidth: 320,
+  designHeight: 600,
+  child: MyCustomDialog(), // This subtree now uses 320x600 as the 1.0 scale reference
+)
+```
+
+### 🐞 Debug Overlay
+
+Visualize live responsive metrics directly on your screen.
+
+```dart
+AppSizerDebugOverlay(
+  child: MyAppContent(),
+)
+```
+
+> **Note**: The HUD only renders if `isDebugLogs: true` is set in `AppSizer` and the app is in Debug mode. It is a zero-cost pass-through in Release builds.
+
 ## 🏗️ Architecture
 
 ### Core Components
@@ -395,6 +426,9 @@ Run this command in your terminal:
 ```bash
 dart run app_sizer:generate_prescale
 ```
+
+> [!IMPORTANT]
+> **Migration Note**: If you are upgrading from a version prior to 0.0.3, you **must** re-run the generator. The `ScaleType` parameter in `precalcList` has changed from a `String` to an `enum` to prevent typos and improve IDE support. Re-running the command will automatically update your generated files.
 
 This command will:
 1.  **Scan** your project for all `.w`, `.h`, `.sp`, `.r`, `.dg`, and `.dm` extensions.

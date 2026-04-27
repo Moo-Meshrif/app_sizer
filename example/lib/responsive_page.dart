@@ -42,6 +42,9 @@ class _ResponsiveBody extends StatelessWidget {
           _buildTypographySection(context),
           20.vGap,
           _buildAdaptiveLayoutExample(context),
+          20.vGap,
+          _buildScopedOverrideExample(context),
+          40.vGap,
         ],
       ),
     );
@@ -288,6 +291,54 @@ class _ResponsiveBody extends StatelessWidget {
               ),
             );
           },
+        ),
+      ],
+    );
+  }
+
+  Widget _buildScopedOverrideExample(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text('AppSizerScope (Local Overrides)', style: context.title),
+        Text(
+          'This box is a 320x480 "mini-phone" mockup using its own scaling context.',
+          style: context.subtitle.copyWith(color: Colors.grey, fontSize: 12.sp),
+        ),
+        10.vGap,
+        Container(
+          width: double.infinity,
+          height: 200.h,
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16.r),
+          ),
+          child: AppSizerScope(
+            designWidth: 320,
+            designHeight: 480,
+            child: Builder(builder: (context) {
+              return Center(
+                child: Container(
+                  width: 160.w, // Half of 320
+                  height: 80.h,
+                  decoration: BoxDecoration(
+                    color: Colors.blue.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(8.r),
+                    border: Border.all(color: Colors.blue),
+                  ),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text('160.w in 320px', style: context.small),
+                      Text(
+                          'Scale: ${context.appSizes.scaleW.toStringAsFixed(2)}',
+                          style: TextStyle(fontSize: 10.sp)),
+                    ],
+                  ),
+                ),
+              );
+            }),
+          ),
         ),
       ],
     );

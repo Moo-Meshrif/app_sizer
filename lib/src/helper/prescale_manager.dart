@@ -1,5 +1,30 @@
 import 'dart:math';
-import '../responsive.dart';
+
+import 'package:app_sizer/app_sizer.dart';
+
+/// The axis or metric to pre-calculate with [PreScaleManager.precalcList].
+///
+/// Using this enum instead of a raw string prevents silent typo bugs and
+/// enables IDE auto-completion.
+enum ScaleType {
+  /// Scale by design width.
+  w,
+
+  /// Scale by design height.
+  h,
+
+  /// Scale for text / font sizes (clamped).
+  sp,
+
+  /// Scale by the shorter axis (radius / symmetric sizes).
+  r,
+
+  /// Scale by both axes combined (diagonal).
+  dg,
+
+  /// Scale by the longer axis (diameter).
+  dm,
+}
 
 /// ------------------------------------------------------------
 /// PreScaleManager
@@ -108,38 +133,31 @@ class PreScaleManager {
     return scaled;
   }
 
-  /// Precalculate a list of numbers for width, height, or text
-  /// Pre-calculates a list of [numbers] for the given [type] ('w', 'h', 'sp', 'r', 'dg', or 'dm').
+  /// Precalculate a list of numbers for the given [type].
+  ///
+  /// Pre-calculates and caches all values in [numbers] using the scale method
+  /// indicated by [type]. Call this in your `precalcFunction` to warm up the
+  /// cache before the first frame.
   void precalcList(
     AppSizesNotifier notifier,
     List<double> numbers, {
-    String type = 'w',
+    ScaleType type = ScaleType.w,
   }) {
-    assert(
-      ['w', 'h', 'sp', 'r', 'dg', 'dm'].contains(type),
-      'Invalid type "$type". Must be one of: w, h, sp, r, dg, dm.',
-    );
     updateScale(notifier);
     for (final num in numbers) {
       switch (type) {
-        case 'w':
-          w(notifier, num); // Call manager method to cache
-          break;
-        case 'h':
-          h(notifier, num); // Call manager method to cache
-          break;
-        case 'sp':
-          sp(notifier, num); // Call manager method to cache
-          break;
-        case 'r':
-          r(notifier, num); // Call manager method to cache
-          break;
-        case 'dg':
-          dg(notifier, num); // Call manager method to cache
-          break;
-        case 'dm':
-          dm(notifier, num); // Call manager method to cache
-          break;
+        case ScaleType.w:
+          w(notifier, num);
+        case ScaleType.h:
+          h(notifier, num);
+        case ScaleType.sp:
+          sp(notifier, num);
+        case ScaleType.r:
+          r(notifier, num);
+        case ScaleType.dg:
+          dg(notifier, num);
+        case ScaleType.dm:
+          dm(notifier, num);
       }
     }
   }

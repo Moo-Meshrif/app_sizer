@@ -1,6 +1,5 @@
+import 'package:app_sizer/app_sizer.dart';
 import 'package:flutter/material.dart';
-import '../responsive.dart';
-import 'prescale_manager.dart';
 
 /// ------------------------------------------------------------
 /// Extensions
@@ -60,20 +59,47 @@ extension AppSizesX on BuildContext {
   /// Example: `context.srh(0.3)` → 30 % of the usable screen height.
   double srh(double value) => value * safeHeight;
 
+  /// ------------------------------------------------------------
+  /// Helper for getting values based on device type
+  /// ------------------------------------------------------------
+  /// Returns a value based on the current device type.
+  ///
+  /// Example: `context.value(20, tablet: 24, largeTablet: 28, desktop: 32)`
+  /// returns 20 for mobile, 24 for tablet, 28 for large tablet, and 32 for desktop.
+  T value<T>(T mobile, {T? tablet, T? largeTablet, T? desktop}) =>
+      appSizes.value<T>(
+        mobile,
+        tablet: tablet,
+        largeTablet: largeTablet,
+        desktop: desktop,
+      );
+
+  /// ------------------------------------------------------------
+  /// Helper for getting text styles based on device type
+  /// ------------------------------------------------------------
+
+  /// Returns a [TextStyle] with extra-large font size.
   TextStyle get extraLarge => TextStyle(
         fontSize: appSizes.extraLargeTextSize,
         fontWeight: FontWeight.bold,
       );
 
-  TextStyle get large =>
-      TextStyle(fontSize: appSizes.largeTextSize, fontWeight: FontWeight.bold);
+  /// Returns a [TextStyle] with large font size.
+  TextStyle get large => TextStyle(
+        fontSize: appSizes.largeTextSize,
+        fontWeight: FontWeight.bold,
+      );
 
+  /// Returns a [TextStyle] with medium font size.
   TextStyle get medium => TextStyle(fontSize: appSizes.mediumTextSize);
 
+  /// Returns a [TextStyle] with small font size.
   TextStyle get small => TextStyle(fontSize: appSizes.smallTextSize);
 
+  /// Returns a [TextStyle] with large font size (alias for [large]).
   TextStyle get title => large;
 
+  /// Returns a [TextStyle] with medium font size (alias for [medium]).
   TextStyle get subtitle => medium;
 }
 
@@ -170,7 +196,7 @@ extension ScaleX on num {
     int? largeTablet,
     int? desktop,
   }) =>
-      context.appSizes.value(
+      context.appSizes.value<int>(
         toInt(),
         tablet: tablet,
         largeTablet: largeTablet,

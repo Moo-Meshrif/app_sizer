@@ -11,23 +11,24 @@ void useTestAppSizerPrecalc(AppSizesNotifier notifier) {
   manager.precalcList(notifier, [
     1.0,
     100.0,
-  ], type: 'w');
+  ], type: ScaleType.w);
 
   // Pre-calc h
   manager.precalcList(notifier, [
     20.0,
     50.0,
     50.5,
-  ], type: 'h');
+  ], type: ScaleType.h);
 
   // Pre-calc sp
   manager.precalcList(notifier, [
     16.0,
-  ], type: 'sp');
+  ], type: ScaleType.sp);
 
   // Pre-calc r
   manager.precalcList(notifier, [
     12.0,
-  ], type: 'r');
+  ], type: ScaleType.r);
 
 }
+

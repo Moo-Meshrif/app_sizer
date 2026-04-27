@@ -16,14 +16,17 @@ class MyApp extends StatelessWidget {
         designWidth: 375,
         designHeight: 812,
         isDebugLogs: true,
-        builder: (context) => MaterialApp(
-          debugShowCheckedModeBanner: false,
-          title: 'Responsive Test',
-          theme: ThemeData(
-            primarySwatch: Colors.blue,
-            useMaterial3: true,
+        builder: (context) => AppSizerDebugOverlay(
+          child: MaterialApp(
+            debugShowCheckedModeBanner: false,
+            title: 'Responsive Test',
+            theme: ThemeData(
+              primarySwatch: Colors.blue,
+              colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
+              useMaterial3: true,
+            ),
+            home: const ResponsivePage(),
           ),
-          home: const ResponsivePage(),
         ),
       );
 }

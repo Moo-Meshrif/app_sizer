@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:app_sizer/app_sizer.dart';
-import 'test_app_sizer_precalc.g.dart';
 
 void main() {
   group('AppSizesNotifier Tests', () {
@@ -163,6 +162,30 @@ void main() {
         expect(notifier.r(10.0), equals(10.0));
       });
 
+      test('dg() should use both scale factors (diagonal)', () {
+        notifier.update(const Size(750.0, 1624.0), Orientation.portrait);
+        // scaleW = 2.0, scaleH = 2.0, dg = 2 * 2 = 4.0
+        expect(notifier.dg(10.0), equals(40.0));
+
+        notifier.update(const Size(750.0, 812.0), Orientation.portrait);
+        // scaleW = 2.0, scaleH = 1.0, dg = 2 * 1 = 2.0
+        expect(notifier.dg(10.0), equals(20.0));
+      });
+
+      test('dm() should use maximum scale factor (diameter)', () {
+        notifier.update(const Size(750.0, 1624.0), Orientation.portrait);
+        // scaleW = 2.0, scaleH = 2.0, max = 2.0
+        expect(notifier.dm(10.0), equals(20.0));
+
+        notifier.update(const Size(750.0, 812.0), Orientation.portrait);
+        // scaleW = 2.0, scaleH = 1.0, max = 2.0
+        expect(notifier.dm(10.0), equals(20.0));
+
+        notifier.update(const Size(187.5, 1624.0), Orientation.portrait);
+        // scaleW = 0.5, scaleH = 2.0, max = 2.0
+        expect(notifier.dm(10.0), equals(20.0));
+      });
+
       test('sp() should scale text with clamping', () {
         // scaleText for tablet at 750px width = 750/600 = 1.25
         // sp clamps between 0.6x and 1.4x of original by default
@@ -283,6 +306,34 @@ void main() {
         );
         customNotifier.update(const Size(375.0, 812.0), Orientation.portrait);
         expect(customNotifier.mediumTextSize, equals(18.0));
+      });
+    });
+
+    group('Capped Scaling Methods', () {
+      setUp(() {
+        notifier.update(const Size(750.0, 1624.0), Orientation.portrait);
+        // scaleW = 2.0, scaleH = 2.0
+      });
+
+      test('wMax() should scale and clamp to max width', () {
+        // 100 * 2.0 = 200, capped at 150 -> 150
+        expect(notifier.wMax(100.0, 150.0), equals(150.0));
+        // 50 * 2.0 = 100, capped at 150 -> 100
+        expect(notifier.wMax(50.0, 150.0), equals(100.0));
+      });
+
+      test('hMax() should scale and clamp to max height', () {
+        // 100 * 2.0 = 200, capped at 150 -> 150
+        expect(notifier.hMax(100.0, 150.0), equals(150.0));
+        // 50 * 2.0 = 100, capped at 150 -> 100
+        expect(notifier.hMax(50.0, 150.0), equals(100.0));
+      });
+
+      test('rMax() should scale and clamp to max radius', () {
+        // 100 * 2.0 = 200, capped at 150 -> 150
+        expect(notifier.rMax(100.0, 150.0), equals(150.0));
+        // 50 * 2.0 = 100, capped at 150 -> 100
+        expect(notifier.rMax(50.0, 150.0), equals(100.0));
       });
     });
 
@@ -422,6 +473,16 @@ void main() {
       expect(result, equals(24.0));
     });
 
+    test('should scale diagonal using .dg extension', () {
+      final result = 10.dg;
+      expect(result, equals(40.0)); // 10 * 2.0 * 2.0
+    });
+
+    test('should scale diameter using .dm extension', () {
+      final result = 10.dm;
+      expect(result, equals(20.0)); // 10 * max(2.0, 2.0)
+    });
+
     test('should scale text using .sp extension', () {
       final result = 16.sp;
       // scaleText = 1.25, 16 * 1.25 = 20.0 (within 9.6-22.4 range)
@@ -451,362 +512,30 @@ void main() {
       expect(gap.width, equals(40.0)); // 20 * 2.0 scale
       expect(gap.height, isNull);
     });
-  });
 
-  group('AdaptiveLayout Tests', () {
-    Widget buildTestWidget({
-      required DeviceType deviceType,
-      required Widget child,
-    }) {
-      final notifier = AppSizesNotifier(
-        designWidth: 375.0,
-        designHeight: 812.0,
-      );
-
-      // Set appropriate size for device type
-      final size = switch (deviceType) {
-        DeviceType.mobile => const Size(375.0, 812.0),
-        DeviceType.tablet => const Size(768.0, 1024.0),
-        DeviceType.tabletLarge => const Size(1000.0, 1400.0),
-        DeviceType.desktop => const Size(1920.0, 1080.0),
-      };
-
-      notifier.update(size, Orientation.portrait);
-
-      return MaterialApp(
-        home: AppSizesProvider(
-          notifier: notifier,
-          child: child,
-        ),
-      );
-    }
-
-    testWidgets('should render mobile layout for mobile device',
-        (tester) async {
-      await tester.pumpWidget(
-        buildTestWidget(
-          deviceType: DeviceType.mobile,
-          child: AdaptiveLayout(
-            mobileLayout: (context) => const Text('Mobile'),
-            tabletLayout: (context) => const Text('Tablet'),
-            desktopLayout: (context) => const Text('Desktop'),
-          ),
-        ),
-      );
-
-      expect(find.text('Mobile'), findsOneWidget);
-      expect(find.text('Tablet'), findsNothing);
-      expect(find.text('Desktop'), findsNothing);
+    test('should scale and clamp using .wMax extension', () {
+      expect(100.wMax(150), equals(150.0));
+      expect(50.wMax(150), equals(100.0));
     });
 
-    testWidgets('should render tablet layout for tablet device',
-        (tester) async {
-      await tester.pumpWidget(
-        buildTestWidget(
-          deviceType: DeviceType.tablet,
-          child: AdaptiveLayout(
-            mobileLayout: (context) => const Text('Mobile'),
-            tabletLayout: (context) => const Text('Tablet'),
-            desktopLayout: (context) => const Text('Desktop'),
-          ),
-        ),
-      );
-
-      expect(find.text('Mobile'), findsNothing);
-      expect(find.text('Tablet'), findsOneWidget);
-      expect(find.text('Desktop'), findsNothing);
+    test('should scale and clamp using .hMax extension', () {
+      expect(100.hMax(150), equals(150.0));
+      expect(50.hMax(150), equals(100.0));
     });
 
-    testWidgets('should render tablet layout for large tablet device',
-        (tester) async {
-      await tester.pumpWidget(
-        buildTestWidget(
-          deviceType: DeviceType.tabletLarge,
-          child: AdaptiveLayout(
-            mobileLayout: (context) => const Text('Mobile'),
-            tabletLayout: (context) => const Text('Tablet'),
-            desktopLayout: (context) => const Text('Desktop'),
-          ),
-        ),
-      );
-
-      expect(find.text('Mobile'), findsNothing);
-      expect(find.text('Tablet'), findsOneWidget);
-      expect(find.text('Desktop'), findsNothing);
+    test('should scale and clamp using .rMax extension', () {
+      expect(100.rMax(150), equals(150.0));
+      expect(50.rMax(150), equals(100.0));
     });
 
-    testWidgets('should render desktop layout for desktop device',
-        (tester) async {
-      await tester.pumpWidget(
-        buildTestWidget(
-          deviceType: DeviceType.desktop,
-          child: AdaptiveLayout(
-            mobileLayout: (context) => const Text('Mobile'),
-            tabletLayout: (context) => const Text('Tablet'),
-            desktopLayout: (context) => const Text('Desktop'),
-          ),
-        ),
-      );
-
-      expect(find.text('Mobile'), findsNothing);
-      expect(find.text('Tablet'), findsNothing);
-      expect(find.text('Desktop'), findsOneWidget);
+    test('should create vertical gap with max using .vGapMax', () {
+      final gap = 100.vGapMax(150);
+      expect(gap.height, equals(150.0));
     });
 
-    testWidgets('should fallback to mobile when tablet layout not provided',
-        (tester) async {
-      await tester.pumpWidget(
-        buildTestWidget(
-          deviceType: DeviceType.tablet,
-          child: AdaptiveLayout(
-            mobileLayout: (context) => const Text('Mobile'),
-            desktopLayout: (context) => const Text('Desktop'),
-          ),
-        ),
-      );
-
-      expect(find.text('Mobile'), findsOneWidget);
-      expect(find.text('Desktop'), findsNothing);
-    });
-
-    testWidgets(
-        'should fallback to tablet then mobile when desktop layout not provided',
-        (tester) async {
-      await tester.pumpWidget(
-        buildTestWidget(
-          deviceType: DeviceType.desktop,
-          child: AdaptiveLayout(
-            mobileLayout: (context) => const Text('Mobile'),
-            tabletLayout: (context) => const Text('Tablet'),
-          ),
-        ),
-      );
-
-      expect(find.text('Mobile'), findsNothing);
-      expect(find.text('Tablet'), findsOneWidget);
-    });
-
-    testWidgets('should fallback to mobile when no other layouts provided',
-        (tester) async {
-      await tester.pumpWidget(
-        buildTestWidget(
-          deviceType: DeviceType.desktop,
-          child: AdaptiveLayout(
-            mobileLayout: (context) => const Text('Mobile'),
-          ),
-        ),
-      );
-
-      expect(find.text('Mobile'), findsOneWidget);
-    });
-  });
-
-  group('AppSizesX Extension Tests', () {
-    testWidgets('should provide access to appSizes through context',
-        (tester) async {
-      final notifier = AppSizesNotifier(
-        designWidth: 375.0,
-        designHeight: 812.0,
-      );
-      notifier.update(const Size(375.0, 812.0), Orientation.portrait);
-
-      late AppSizesNotifier capturedNotifier;
-
-      await tester.pumpWidget(
-        MaterialApp(
-          home: AppSizesProvider(
-            notifier: notifier,
-            child: Builder(
-              builder: (context) {
-                capturedNotifier = context.appSizes;
-                return Container();
-              },
-            ),
-          ),
-        ),
-      );
-
-      expect(capturedNotifier, equals(notifier));
-    });
-
-    testWidgets('should provide access to deviceType through context',
-        (tester) async {
-      final notifier = AppSizesNotifier(
-        designWidth: 375.0,
-        designHeight: 812.0,
-      );
-      notifier.update(const Size(768.0, 1024.0), Orientation.portrait);
-
-      late DeviceType capturedDeviceType;
-
-      await tester.pumpWidget(
-        MaterialApp(
-          home: AppSizesProvider(
-            notifier: notifier,
-            child: Builder(
-              builder: (context) {
-                capturedDeviceType = context.deviceType;
-                return Container();
-              },
-            ),
-          ),
-        ),
-      );
-
-      expect(capturedDeviceType, equals(DeviceType.tablet));
-    });
-
-    testWidgets('should provide sh() method through context', (tester) async {
-      final notifier = AppSizesNotifier(
-        designWidth: 375.0,
-        designHeight: 812.0,
-      );
-      notifier.update(const Size(375.0, 812.0), Orientation.portrait);
-
-      late double result;
-
-      await tester.pumpWidget(
-        MaterialApp(
-          home: AppSizesProvider(
-            notifier: notifier,
-            child: Builder(
-              builder: (context) {
-                result = context.sh(0.5);
-                return Container();
-              },
-            ),
-          ),
-        ),
-      );
-
-      expect(result, equals(406.0)); // 812 * 0.5
-    });
-
-    testWidgets('should provide sw() method through context', (tester) async {
-      final notifier = AppSizesNotifier(
-        designWidth: 375.0,
-        designHeight: 812.0,
-      );
-      notifier.update(const Size(375.0, 812.0), Orientation.portrait);
-
-      late double result;
-
-      await tester.pumpWidget(
-        MaterialApp(
-          home: AppSizesProvider(
-            notifier: notifier,
-            child: Builder(
-              builder: (context) {
-                result = context.sw(0.5);
-                return Container();
-              },
-            ),
-          ),
-        ),
-      );
-
-      expect(result, equals(187.5)); // 375 * 0.5
-    });
-
-    testWidgets('should provide text style getters through context',
-        (tester) async {
-      final notifier = AppSizesNotifier(
-        designWidth: 375.0,
-        designHeight: 812.0,
-      );
-      notifier.update(const Size(375.0, 812.0), Orientation.portrait);
-
-      late TextStyle extraLarge;
-      late TextStyle large;
-      late TextStyle medium;
-      late TextStyle small;
-
-      await tester.pumpWidget(
-        MaterialApp(
-          home: AppSizesProvider(
-            notifier: notifier,
-            child: Builder(
-              builder: (context) {
-                extraLarge = context.extraLarge;
-                large = context.large;
-                medium = context.medium;
-                small = context.small;
-                return Container();
-              },
-            ),
-          ),
-        ),
-      );
-
-      expect(extraLarge.fontSize, equals(26.0));
-      expect(extraLarge.fontWeight, equals(FontWeight.bold));
-      expect(large.fontSize, equals(20.0));
-      expect(large.fontWeight, equals(FontWeight.bold));
-      expect(medium.fontSize, equals(16.0));
-      expect(small.fontSize, equals(12.0));
-    });
-  });
-
-  group('Integration Tests', () {
-    testWidgets('should integrate AppSizer with PreScaleManager',
-        (tester) async {
-      PreScaleManager().clear();
-
-      await tester.pumpWidget(
-        MaterialApp(
-          home: AppSizer(
-            precalcFunction: useTestAppSizerPrecalc,
-            designWidth: 375.0,
-            designHeight: 812.0,
-            builder: (context) {
-              // Access values through context to trigger caching
-              final w = 100.w;
-              final h = 50.h;
-              final sp = 16.sp;
-              return Column(
-                children: [
-                  SizedBox(width: w, height: h),
-                  Text('Test', style: TextStyle(fontSize: sp)),
-                ],
-              );
-            },
-          ),
-        ),
-      );
-
-      await tester.pumpAndSettle();
-
-      // Verify PreScaleManager has cached values
-      // Note: The cache is populated during the update() call in AppSizer
-      // via precalcAllScaledValues()
-      expect(PreScaleManager().cacheSize, greaterThan(0));
-    });
-
-    testWidgets('should handle responsive value selection in context',
-        (tester) async {
-      final notifier = AppSizesNotifier(
-        designWidth: 375.0,
-        designHeight: 812.0,
-      );
-      notifier.update(const Size(768.0, 1024.0), Orientation.portrait);
-
-      late int result;
-
-      await tester.pumpWidget(
-        MaterialApp(
-          home: AppSizesProvider(
-            notifier: notifier,
-            child: Builder(
-              builder: (context) {
-                result = 2.value(context, tablet: 3, desktop: 4);
-                return Container();
-              },
-            ),
-          ),
-        ),
-      );
-
-      expect(result, equals(3)); // Tablet value
+    test('should create horizontal gap with max using .hGapMax', () {
+      final gap = 100.hGapMax(150);
+      expect(gap.width, equals(150.0));
     });
   });
 

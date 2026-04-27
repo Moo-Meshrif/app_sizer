@@ -97,6 +97,18 @@ void main() {
       expect(manager.isCachedR(12.0), isTrue); // Still cached
     });
 
+    test('should cache diagonal (dg) values after first calculation', () {
+      expect(manager.getDg(10.0), equals(10.0)); // Fallback
+      manager.dg(notifier, 10.0);
+      expect(manager.getDg(10.0), equals(10.0)); // scale is 1.0
+    });
+
+    test('should cache diameter (dm) values after first calculation', () {
+      expect(manager.getDm(10.0), equals(10.0)); // Fallback
+      manager.dm(notifier, 10.0);
+      expect(manager.getDm(10.0), equals(10.0)); // scale is 1.0
+    });
+
     test('should cache different values independently', () {
       // Cache multiple width values
       final w100 = manager.w(notifier, 100.0);
@@ -141,6 +153,32 @@ void main() {
 
       // Verify cache has 4 entries (one for each type)
       expect(manager.cacheSize, equals(4));
+    });
+
+    test('should cache capped values independently', () {
+      manager.getWMax(100.0, 150.0); // No notifier update yet, fallback
+      
+      // Update notifier to 2x scale
+      notifier.update(const Size(750.0, 1624.0), Orientation.portrait);
+      
+      // 100 * 2.0 = 200, capped at 150 -> 150
+      final val1 = manager.getWMax(100.0, 150.0);
+      expect(val1, equals(150.0));
+      
+      // 100 * 2.0 = 200, capped at 250 -> 200
+      final val2 = manager.getWMax(100.0, 250.0);
+      expect(val2, equals(200.0));
+      
+      // Should be different cache entries
+      expect(manager.cacheSize, equals(2));
+    });
+
+    test('should cache hMax and rMax correctly', () {
+      notifier.update(const Size(750.0, 1624.0), Orientation.portrait);
+      
+      expect(manager.getHMax(100.0, 150.0), equals(150.0));
+      expect(manager.getRMax(100.0, 150.0), equals(150.0));
+      expect(manager.cacheSize, equals(2));
     });
 
     test('should clear cache when scale factors change', () {
@@ -258,7 +296,7 @@ void main() {
       }
 
       // Precalculate width values
-      manager.precalcList(notifier, testValues, type: 'w');
+      manager.precalcList(notifier, testValues, type: ScaleType.w);
 
       // All values should now be cached
       for (final value in testValues) {
@@ -271,10 +309,12 @@ void main() {
       final testValues = [10.0, 20.0, 30.0];
 
       // Precalculate for all types
-      manager.precalcList(notifier, testValues, type: 'w');
-      manager.precalcList(notifier, testValues, type: 'h');
-      manager.precalcList(notifier, testValues, type: 'sp');
-      manager.precalcList(notifier, testValues, type: 'r');
+      manager.precalcList(notifier, testValues, type: ScaleType.w);
+      manager.precalcList(notifier, testValues, type: ScaleType.h);
+      manager.precalcList(notifier, testValues, type: ScaleType.sp);
+      manager.precalcList(notifier, testValues, type: ScaleType.r);
+      manager.precalcList(notifier, testValues, type: ScaleType.dg);
+      manager.precalcList(notifier, testValues, type: ScaleType.dm);
 
       // Verify all types are cached
       for (final value in testValues) {
@@ -284,8 +324,8 @@ void main() {
         expect(manager.isCachedR(value), isTrue);
       }
 
-      // Verify cache size: 3 values × 4 types = 12 entries
-      expect(manager.cacheSize, equals(12));
+      // Verify cache size: 3 values × 6 types = 18 entries
+      expect(manager.cacheSize, equals(18));
     });
 
     test('should maintain singleton instance', () {

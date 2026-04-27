@@ -12,7 +12,8 @@ void useAppSizerPrecalc(AppSizesNotifier notifier) {
     10.0,
     16.0,
     20.0,
-  ], type: 'w');
+    160.0,
+  ], type: ScaleType.w);
 
   // Pre-calc h
   manager.precalcList(notifier, [
@@ -21,13 +22,17 @@ void useAppSizerPrecalc(AppSizesNotifier notifier) {
     16.0,
     20.0,
     30.0,
-  ], type: 'h');
+    40.0,
+    80.0,
+    200.0,
+  ], type: ScaleType.h);
 
   // Pre-calc sp
   manager.precalcList(notifier, [
+    10.0,
     12.0,
     16.0,
-  ], type: 'sp');
+  ], type: ScaleType.sp);
 
   // Pre-calc r
   manager.precalcList(notifier, [
@@ -36,6 +41,6 @@ void useAppSizerPrecalc(AppSizesNotifier notifier) {
     12.0,
     16.0,
     20.0,
-  ], type: 'r');
+  ], type: ScaleType.r);
 
 }

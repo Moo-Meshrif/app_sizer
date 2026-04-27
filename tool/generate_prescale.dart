@@ -174,7 +174,7 @@ void _generateFor(
     for (final num in sorted) {
       buffer.writeln('    $num,');
     }
-    buffer.writeln("  ], type: '$type');\n");
+    buffer.writeln("  ], type: ScaleType.$type);\n");
   }
 
   writeList(wNumbers, 'w');
