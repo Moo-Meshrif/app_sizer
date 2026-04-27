@@ -128,6 +128,12 @@ extension ScaleX on num {
   /// Scaled radius based on the smaller screen dimension.
   double get r => PreScaleManager().getR(toDouble());
 
+  /// Scaled diagonal based on both width and height scale factors.
+  double get dg => PreScaleManager().getDg(toDouble());
+
+  /// Scaled diameter based on the larger screen dimension.
+  double get dm => PreScaleManager().getDm(toDouble());
+
   /// A vertical gap (SizedBox) with scaled height.
   SizedBox get vGap => SizedBox(height: h);
 
@@ -155,7 +161,7 @@ extension ScaleX on num {
   SizedBox hGapMax(double max) => SizedBox(width: wMax(max));
 
   /// Returns a specific integer value based on the current [DeviceType].
-  /// 
+  ///
   /// This is useful for providing different counts (like crossAxisCount in a GridView)
   /// or other non-scaled values for different devices.
   int value(

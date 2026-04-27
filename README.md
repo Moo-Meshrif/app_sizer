@@ -143,6 +143,8 @@ Use these on any `num` (int or double) to scale values based on screen dimension
 | `.w` | Width scaling | Horizontal dimensions, widths |
 | `.h` | Height scaling | Vertical dimensions, heights |
 | `.r` | Radius scaling | Border radius, circular elements |
+| `.dg` | Diagonal scaling | Diagonal based on both width and height |
+| `.dm` | Diameter scaling | Diameter based on larger screen dimension |
 | `.sp` | Text scaling | Font sizes, text dimensions |
 | `.sh` | Screen Height % | `0.5.sh` is 50% of screen height |
 | `.sw` | Screen Width % | `0.5.sw` is 50% of screen width |
@@ -391,11 +393,11 @@ To ensure your app stays ultra-smooth even on lower-end devices, `app_sizer` inc
 
 Run this command in your terminal:
 ```bash
-dart run app_sizer:generate
+dart run app_sizer:generate_prescale
 ```
 
 This command will:
-1.  **Scan** your project for all `.w`, `.h`, `.sp`, and `.r` extensions.
+1.  **Scan** your project for all `.w`, `.h`, `.sp`, `.r`, `.dg`, and `.dm` extensions.
 2.  **Generate** the `lib/app_sizer_precalc.g.dart` file containing all your used values.
 3.  **Inject** the necessary setup into your `AppSizer` widget in `main.dart`.
 

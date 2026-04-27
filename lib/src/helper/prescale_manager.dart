@@ -10,6 +10,7 @@ import '../responsive.dart';
 class PreScaleManager {
   PreScaleManager._private();
   static final PreScaleManager _instance = PreScaleManager._private();
+
   /// Access the single instance of [PreScaleManager].
   factory PreScaleManager() => _instance;
 
@@ -83,16 +84,40 @@ class PreScaleManager {
     return scaled;
   }
 
+  /// Get scaled diagonal
+  /// Internal helper to calculate and cache scaled diagonal.
+  double dg(AppSizesNotifier sizes, double number) {
+    updateScale(sizes);
+    final key = 'dg$number';
+    if (_cache.containsKey(key)) return _cache[key]!;
+
+    final scaled = sizes.dg(number);
+    _cache[key] = scaled;
+    return scaled;
+  }
+
+  /// Get scaled diameter
+  /// Internal helper to calculate and cache scaled diameter.
+  double dm(AppSizesNotifier sizes, double number) {
+    updateScale(sizes);
+    final key = 'dm$number';
+    if (_cache.containsKey(key)) return _cache[key]!;
+
+    final scaled = sizes.dm(number);
+    _cache[key] = scaled;
+    return scaled;
+  }
+
   /// Precalculate a list of numbers for width, height, or text
-  /// Pre-calculates a list of [numbers] for the given [type] ('w', 'h', 'sp', or 'r').
+  /// Pre-calculates a list of [numbers] for the given [type] ('w', 'h', 'sp', 'r', 'dg', or 'dm').
   void precalcList(
     AppSizesNotifier notifier,
     List<double> numbers, {
     String type = 'w',
   }) {
     assert(
-      ['w', 'h', 'sp', 'r'].contains(type),
-      'Invalid type "$type". Must be one of: w, h, sp, r.',
+      ['w', 'h', 'sp', 'r', 'dg', 'dm'].contains(type),
+      'Invalid type "$type". Must be one of: w, h, sp, r, dg, dm.',
     );
     updateScale(notifier);
     for (final num in numbers) {
@@ -108,6 +133,12 @@ class PreScaleManager {
           break;
         case 'r':
           r(notifier, num); // Call manager method to cache
+          break;
+        case 'dg':
+          dg(notifier, num); // Call manager method to cache
+          break;
+        case 'dm':
+          dm(notifier, num); // Call manager method to cache
           break;
       }
     }
@@ -160,6 +191,20 @@ class PreScaleManager {
     if (_lastScaleW == null || _lastScaleH == null) return number;
     return _cache.putIfAbsent(
         'r$number', () => number * min(_lastScaleW!, _lastScaleH!));
+  }
+
+  /// Returns the cached scaled diagonal for [number], or calculates it if not present.
+  double getDg(double number) {
+    if (_lastScaleW == null || _lastScaleH == null) return number;
+    return _cache.putIfAbsent(
+        'dg$number', () => number * _lastScaleW! * _lastScaleH!);
+  }
+
+  /// Returns the cached scaled diameter for [number], or calculates it if not present.
+  double getDm(double number) {
+    if (_lastScaleW == null || _lastScaleH == null) return number;
+    return _cache.putIfAbsent(
+        'dm$number', () => number * max(_lastScaleW!, _lastScaleH!));
   }
 
   /// Capped variants — scale and clamp to [max] logical pixels.

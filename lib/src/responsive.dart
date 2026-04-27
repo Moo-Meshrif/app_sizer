@@ -220,6 +220,8 @@ class AppSizesNotifier extends ChangeNotifier {
   double w(double value) => value * scaleW;
   double h(double value) => value * scaleH;
   double r(double value) => value * min(scaleW, scaleH);
+  double dg(double value) => value * scaleH * scaleW;
+  double dm(double value) => value * max(scaleW, scaleH);
   double sp(double value) {
     double responsiveFontSize = value * scaleText;
     return responsiveFontSize.clamp(
